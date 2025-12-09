@@ -170,6 +170,13 @@ std::string get_config_path() {
     return (fs::path(home) / ".config" / "curlent" / "config").string();
 }
 
+std::string expand_tilde(const std::string& path) {
+    if (path.empty() || path[0] != '~') return path;
+    const char* home = std::getenv("HOME");
+    if (!home) return path;
+    return std::string(home) + path.substr(1);
+}
+
 void load_config(Options& opts) {
     std::string config_path = get_config_path();
     std::ifstream ifs(config_path);
@@ -198,7 +205,7 @@ void load_config(Options& opts) {
         value.erase(0, value.find_first_not_of(" \t"));
 
         if (key == "output") {
-            opts.output_dir = value;
+            opts.output_dir = expand_tilde(value);
         } else if (key == "interface") {
             opts.interface = value;
         } else if (key == "ratio") {
@@ -251,7 +258,7 @@ Options parse_args(int argc, char* argv[]) {
                 std::cerr << "Error: -o requires an argument\n";
                 std::exit(1);
             }
-            opts.output_dir = argv[++i];
+            opts.output_dir = expand_tilde(argv[++i]);
         } else if (arg == "-i" || arg == "--interface") {
             if (i + 1 >= argc) {
                 std::cerr << "Error: -i requires an argument\n";
