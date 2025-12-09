@@ -1,0 +1,14 @@
+# Binary
+curlent
+
+# Torrent files
+*.torrent
+*.iso
+
+# Editor
+*.swp
+*~
+
+# Build artifacts
+*.o
+*.d

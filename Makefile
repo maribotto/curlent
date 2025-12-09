@@ -1,0 +1,25 @@
+CXX = g++
+CXXFLAGS = -std=c++17 -Wall -Wextra -O2 $(shell pkg-config --cflags libtorrent-rasterbar)
+LDFLAGS = $(shell pkg-config --libs libtorrent-rasterbar) -lpthread
+
+TARGET = curlent
+SRC = curlent.cpp
+
+PREFIX = /usr/local
+
+all: $(TARGET)
+
+$(TARGET): $(SRC)
+	$(CXX) $(CXXFLAGS) -o $@ $< $(LDFLAGS)
+
+clean:
+	rm -f $(TARGET)
+
+install: $(TARGET)
+	install -d $(DESTDIR)$(PREFIX)/bin
+	install -m 755 $(TARGET) $(DESTDIR)$(PREFIX)/bin/
+
+uninstall:
+	rm -f $(DESTDIR)$(PREFIX)/bin/$(TARGET)
+
+.PHONY: all clean install uninstall
