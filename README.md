@@ -2,14 +2,7 @@
 
 A wget-like command-line torrent downloader using libtorrent.
 
-```
-$ curlent archlinux-2025.12.01-x86_64.iso.torrent
-Name: archlinux-2025.12.01-x86_64.iso
-Size: 1.4 GB
-Files: 1
-
- 67% [#################################|                 ] 0.9 GB/1.4 GB 85.2 MB/s eta 6s
-```
+![screenshot](screenshot.png)
 
 ## Features
 
