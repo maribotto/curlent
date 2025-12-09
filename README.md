@@ -110,6 +110,10 @@ Command line options override config file settings.
 
 When using `-i`, curlent binds all traffic to the specified interface and monitors its status. If the interface goes down (e.g., VPN disconnects), curlent immediately stops to prevent IP leaks.
 
+## Man Page
+
+After installation, documentation is available via `man curlent`.
+
 ## License
 
 [MIT](LICENSE)

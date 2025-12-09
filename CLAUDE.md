@@ -11,7 +11,7 @@ curlent is a wget-like CLI torrent downloader using libtorrent-rasterbar. It dow
 ```bash
 make              # Build
 make clean        # Clean build artifacts
-make install      # Install to /usr/local/bin + config to ~/.config/curlent/
+make install      # Install to /usr/local/bin + man page + config to ~/.config/curlent/
 make uninstall    # Remove from /usr/local/bin
 ```
 
