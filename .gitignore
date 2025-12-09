@@ -12,3 +12,11 @@ curlent
 # Build artifacts
 *.o
 *.d
+
+# makepkg/AUR
+*.pkg.tar.zst
+*.tar.gz
+src/
+pkg/
+PKGBUILD
+.SRCINFO
