@@ -43,6 +43,8 @@ void signal_handler(int) {
 struct Options {
     std::string input;
     std::string output_dir = ".";
+    std::string interface;
+    float seed_ratio = 2.0f;
     bool quiet = false;
     bool no_seed = false;
 };
@@ -152,13 +154,25 @@ void save_session_state(lt::session& ses, const std::string& path) {
     ofs.write(state.data(), static_cast<std::streamsize>(state.size()));
 }
 
+bool interface_up(const std::string& iface) {
+    std::string path = "/sys/class/net/" + iface + "/operstate";
+    std::ifstream ifs(path);
+    if (!ifs) return false;
+
+    std::string state;
+    ifs >> state;
+    return state == "up" || state == "unknown";
+}
+
 void print_usage(const char* prog) {
-    std::cout << "Usage: " << prog << " <magnet_link_or_torrent_file> [-o OUTPUT_DIR] [-q] [-n]\n"
+    std::cout << "Usage: " << prog << " <magnet_link_or_torrent_file> [OPTIONS]\n"
               << "\n"
               << "Options:\n"
               << "  -o, --output DIR    Output directory (default: current directory)\n"
-              << "  -q, --quiet         Quiet mode - minimal output\n"
+              << "  -i, --interface IF  Bind to network interface with kill switch (e.g. tun0, wg0)\n"
+              << "  -r, --ratio RATIO   Seed ratio target (default: 2.0)\n"
               << "  -n, --no-seed       Exit after download, don't seed\n"
+              << "  -q, --quiet         Quiet mode - minimal output\n"
               << "  -h, --help          Show this help\n";
 }
 
@@ -186,6 +200,18 @@ Options parse_args(int argc, char* argv[]) {
                 std::exit(1);
             }
             opts.output_dir = argv[++i];
+        } else if (arg == "-i" || arg == "--interface") {
+            if (i + 1 >= argc) {
+                std::cerr << "Error: -i requires an argument\n";
+                std::exit(1);
+            }
+            opts.interface = argv[++i];
+        } else if (arg == "-r" || arg == "--ratio") {
+            if (i + 1 >= argc) {
+                std::cerr << "Error: -r requires an argument\n";
+                std::exit(1);
+            }
+            opts.seed_ratio = std::stof(argv[++i]);
         } else if (arg[0] == '-') {
             std::cerr << "Unknown option: " << arg << "\n";
             std::exit(1);
@@ -234,6 +260,17 @@ int download_torrent(const Options& opts) {
 
     // Enable Local Service Discovery
     settings.set_bool(lt::settings_pack::enable_lsd, true);
+
+    // Interface binding
+    if (!opts.interface.empty()) {
+        if (!interface_up(opts.interface)) {
+            std::cerr << "Error: interface " << opts.interface << " is not up\n";
+            return 1;
+        }
+        std::string listen = opts.interface + ":6881";
+        settings.set_str(lt::settings_pack::listen_interfaces, listen);
+        settings.set_str(lt::settings_pack::outgoing_interfaces, opts.interface);
+    }
 
     // Try to load saved session state
     std::string state_path = get_state_path();
@@ -289,6 +326,13 @@ int download_torrent(const Options& opts) {
 
     // Wait for metadata
     while (!handle.status().has_metadata && !interrupted) {
+        // Kill switch
+        if (!opts.interface.empty() && !interface_up(opts.interface)) {
+            save_session_state(ses, state_path);
+            fprintf(stderr, "\n\nKill switch: interface %s is down\n", opts.interface.c_str());
+            return 1;
+        }
+
         if (!opts.quiet && is_magnet(opts.input)) {
             auto s = handle.status();
             auto ss = ses.session_state();
@@ -318,6 +362,13 @@ int download_torrent(const Options& opts) {
 
     // Download loop
     while (!interrupted) {
+        // Kill switch
+        if (!opts.interface.empty() && !interface_up(opts.interface)) {
+            save_session_state(ses, state_path);
+            fprintf(stderr, "\n\nKill switch: interface %s is down\n", opts.interface.c_str());
+            return 1;
+        }
+
         lt::torrent_status status = handle.status();
 
         if (status.is_seeding) {
@@ -379,20 +430,26 @@ int download_torrent(const Options& opts) {
     }
 
     if (!opts.quiet) {
-        fprintf(stderr, "\nSeeding to ratio 2.0...\n\n");
+        fprintf(stderr, "\nSeeding to ratio %.1f...\n\n", opts.seed_ratio);
     }
 
-    // Seeding loop until ratio 2.0
-    const float target_ratio = 2.0f;
+    // Seeding loop until target ratio
     std::int64_t total_size = ti ? ti->total_size() : 0;
-    std::int64_t target_upload = static_cast<std::int64_t>(total_size * target_ratio);
+    std::int64_t target_upload = static_cast<std::int64_t>(total_size * opts.seed_ratio);
 
     while (!interrupted) {
+        // Kill switch
+        if (!opts.interface.empty() && !interface_up(opts.interface)) {
+            save_session_state(ses, state_path);
+            fprintf(stderr, "\n\nKill switch: interface %s is down\n", opts.interface.c_str());
+            return 1;
+        }
+
         lt::torrent_status status = handle.status();
         std::int64_t uploaded = status.total_upload;
         float ratio = total_size > 0 ? static_cast<float>(uploaded) / total_size : 0;
 
-        if (ratio >= target_ratio) {
+        if (ratio >= opts.seed_ratio) {
             break;
         }
 

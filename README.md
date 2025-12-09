@@ -15,7 +15,8 @@ Files: 1
 
 - Download from `.torrent` files or magnet links
 - Colored progress bar with speed and ETA
-- Seeds to ratio 2.0 after download (configurable)
+- Seeds to target ratio after download (default 2.0)
+- Interface binding with kill switch for VPN use
 - DHT, LSD, PEX for peer discovery
 - Session state persistence for faster startup
 - Terminal bell on completion
@@ -57,6 +58,12 @@ curlent "magnet:?xt=urn:btih:..."
 # Specify output directory
 curlent -o ~/Downloads ubuntu.torrent
 
+# Bind to VPN interface with kill switch
+curlent -i tun0 ubuntu.torrent
+
+# Custom seed ratio
+curlent -r 1.0 ubuntu.torrent
+
 # Download only, don't seed
 curlent -n ubuntu.torrent
 
@@ -69,9 +76,15 @@ curlent -q ubuntu.torrent
 | Option | Description |
 |--------|-------------|
 | `-o, --output DIR` | Output directory (default: current) |
+| `-i, --interface IF` | Bind to network interface with kill switch |
+| `-r, --ratio RATIO` | Seed ratio target (default: 2.0) |
 | `-n, --no-seed` | Exit after download, don't seed |
 | `-q, --quiet` | Minimal output |
 | `-h, --help` | Show help |
+
+## Kill Switch
+
+When using `-i`, curlent binds all traffic to the specified interface and monitors its status. If the interface goes down (e.g., VPN disconnects), curlent immediately stops to prevent IP leaks.
 
 ## License
 

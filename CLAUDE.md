@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-curlent is a wget-like CLI torrent downloader using libtorrent-rasterbar. It downloads from magnet links or .torrent files, shows a colored progress bar, and seeds to ratio 2.0 after completion.
+curlent is a wget-like CLI torrent downloader using libtorrent-rasterbar. It downloads from magnet links or .torrent files, shows a colored progress bar, and seeds to a configurable ratio after completion.
 
 ## Build Commands
 
@@ -30,6 +30,8 @@ On Arch Linux: `pacman -S libtorrent-rasterbar boost`
 ./curlent file.torrent                    # Download from .torrent file
 ./curlent "magnet:?xt=urn:btih:..."       # Download from magnet (quote the URL!)
 ./curlent -o ~/Downloads file.torrent     # Specify output directory
+./curlent -i tun0 file.torrent            # Bind to interface with kill switch
+./curlent -r 1.0 file.torrent             # Custom seed ratio
 ./curlent -n file.torrent                 # Download only, no seeding
 ./curlent -q file.torrent                 # Quiet mode
 ```
@@ -41,9 +43,11 @@ Note: Magnet links must be quoted due to shell special characters (`?`, `&`).
 Single-file C++ application (`curlent.cpp`):
 
 - **Session setup**: Creates libtorrent session with DHT bootstrap nodes, LSD, and extensions (ut_metadata, ut_pex, smart_ban)
+- **Interface binding**: Optional `-i` flag binds to specific interface using `listen_interfaces` and `outgoing_interfaces`
+- **Kill switch**: Monitors `/sys/class/net/<iface>/operstate` every 500ms, exits if interface goes down
 - **Session state**: Saved to `~/.cache/curlent/session_state` for faster DHT bootstrap on subsequent runs
 - **Download loop**: Shows progress bar on stderr, updates every 500ms
-- **Seeding loop**: After download completes, seeds until ratio 2.0 (skipped with `-n`)
+- **Seeding loop**: After download completes, seeds until target ratio (default 2.0, configurable with `-r`)
 - **Signal handling**: SIGINT/SIGTERM gracefully interrupt and save session state
 
 Progress output uses ANSI escape codes for colors (green `#` for filled, gray for empty) and `\r\033[K` for single-line updates.
