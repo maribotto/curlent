@@ -112,4 +112,4 @@ When using `-i`, curlent binds all traffic to the specified interface and monito
 
 ## License
 
-MIT
+[MIT](LICENSE)
