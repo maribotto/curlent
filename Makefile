@@ -18,6 +18,8 @@ clean:
 install: $(TARGET)
 	install -d $(DESTDIR)$(PREFIX)/bin
 	install -m 755 $(TARGET) $(DESTDIR)$(PREFIX)/bin/
+	install -d $(DESTDIR)$(PREFIX)/share/man/man1
+	install -m 644 curlent.1 $(DESTDIR)$(PREFIX)/share/man/man1/
 	@if [ -z "$(DESTDIR)" ] && [ ! -f $(HOME)/.config/curlent/config ]; then \
 		mkdir -p $(HOME)/.config/curlent; \
 		cp config.example $(HOME)/.config/curlent/config; \
@@ -26,5 +28,6 @@ install: $(TARGET)
 
 uninstall:
 	rm -f $(DESTDIR)$(PREFIX)/bin/$(TARGET)
+	rm -f $(DESTDIR)$(PREFIX)/share/man/man1/curlent.1
 
 .PHONY: all clean install uninstall

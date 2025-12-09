@@ -1,0 +1,98 @@
+.TH CURLENT 1 "December 2025" "curlent" "User Commands"
+.SH NAME
+curlent \- wget-like command-line torrent downloader
+.SH SYNOPSIS
+.B curlent
+[\fIOPTIONS\fR] \fITORRENT\fR|\fIMAGNET\fR
+.SH DESCRIPTION
+.B curlent
+is a simple command-line torrent downloader using libtorrent.
+It downloads from .torrent files or magnet links and displays a colored progress bar with speed and ETA.
+After download completes, it seeds to a target ratio (default 2.0).
+.SH OPTIONS
+.TP
+.BR \-o ", " \-\-output " " \fIDIR\fR
+Output directory (default: current directory)
+.TP
+.BR \-i ", " \-\-interface " " \fIIF\fR
+Bind to network interface with kill switch.
+If the interface goes down, curlent immediately exits to prevent IP leaks.
+.TP
+.BR \-r ", " \-\-ratio " " \fIRATIO\fR
+Seed ratio target (default: 2.0)
+.TP
+.BR \-n ", " \-\-no\-seed
+Exit immediately after download, don't seed
+.TP
+.BR \-q ", " \-\-quiet
+Minimal output
+.TP
+.BR \-h ", " \-\-help
+Show help message and exit
+.SH CONFIGURATION
+Settings can be persisted in \fI~/.config/curlent/config\fR:
+.PP
+.nf
+# Output directory
+output = ~/Downloads
+
+# Bind to network interface with kill switch
+interface = wg0
+
+# Seed ratio target
+ratio = 1.5
+
+# Exit after download, don't seed
+no-seed = false
+
+# Quiet mode
+quiet = false
+.fi
+.PP
+Command line options override config file settings.
+.SH FILES
+.TP
+.I ~/.config/curlent/config
+Configuration file
+.TP
+.I ~/.cache/curlent/session_state
+DHT session state for faster startup
+.SH EXAMPLES
+Download from .torrent file:
+.PP
+.nf
+curlent ubuntu.torrent
+.fi
+.PP
+Download from magnet link (must be quoted):
+.PP
+.nf
+curlent "magnet:?xt=urn:btih:..."
+.fi
+.PP
+Bind to VPN interface with kill switch:
+.PP
+.nf
+curlent -i tun0 ubuntu.torrent
+.fi
+.PP
+Download only, don't seed:
+.PP
+.nf
+curlent -n ubuntu.torrent
+.fi
+.SH EXIT STATUS
+.TP
+.B 0
+Success
+.TP
+.B 1
+Error or kill switch triggered
+.SH AUTHOR
+Written by maribotto.
+.SH LICENSE
+MIT License
+.SH SEE ALSO
+.BR wget (1),
+.BR curl (1),
+.BR aria2c (1)
