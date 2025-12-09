@@ -11,7 +11,7 @@ curlent is a wget-like CLI torrent downloader using libtorrent-rasterbar. It dow
 ```bash
 make              # Build
 make clean        # Clean build artifacts
-make install      # Install to /usr/local/bin
+make install      # Install to /usr/local/bin + config to ~/.config/curlent/
 make uninstall    # Remove from /usr/local/bin
 ```
 
@@ -38,10 +38,25 @@ On Arch Linux: `pacman -S libtorrent-rasterbar boost`
 
 Note: Magnet links must be quoted due to shell special characters (`?`, `&`).
 
+## Configuration
+
+Config file: `~/.config/curlent/config`
+
+```ini
+output = ~/Downloads
+interface = wg0
+ratio = 2.0
+no-seed = false
+quiet = false
+```
+
+Command line options override config file. Config is loaded in `load_config()`, parsed as `key = value` pairs.
+
 ## Architecture
 
 Single-file C++ application (`curlent.cpp`):
 
+- **Config loading**: Reads `~/.config/curlent/config` before parsing CLI args
 - **Session setup**: Creates libtorrent session with DHT bootstrap nodes, LSD, and extensions (ut_metadata, ut_pex, smart_ban)
 - **Interface binding**: Optional `-i` flag binds to specific interface using `listen_interfaces` and `outgoing_interfaces`
 - **Kill switch**: Monitors `/sys/class/net/<iface>/operstate` every 500ms, exits if interface goes down

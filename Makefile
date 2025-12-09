@@ -18,6 +18,11 @@ clean:
 install: $(TARGET)
 	install -d $(DESTDIR)$(PREFIX)/bin
 	install -m 755 $(TARGET) $(DESTDIR)$(PREFIX)/bin/
+	@if [ -z "$(DESTDIR)" ] && [ ! -f $(HOME)/.config/curlent/config ]; then \
+		mkdir -p $(HOME)/.config/curlent; \
+		cp config.example $(HOME)/.config/curlent/config; \
+		echo "Installed config to ~/.config/curlent/config"; \
+	fi
 
 uninstall:
 	rm -f $(DESTDIR)$(PREFIX)/bin/$(TARGET)

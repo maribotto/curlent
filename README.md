@@ -17,6 +17,7 @@ Files: 1
 - Colored progress bar with speed and ETA
 - Seeds to target ratio after download (default 2.0)
 - Interface binding with kill switch for VPN use
+- Configuration file for persistent settings
 - DHT, LSD, PEX for peer discovery
 - Session state persistence for faster startup
 - Terminal bell on completion
@@ -81,6 +82,29 @@ curlent -q ubuntu.torrent
 | `-n, --no-seed` | Exit after download, don't seed |
 | `-q, --quiet` | Minimal output |
 | `-h, --help` | Show help |
+
+## Configuration
+
+Settings can be persisted in `~/.config/curlent/config`:
+
+```ini
+# Output directory
+output = ~/Downloads
+
+# Bind to network interface with kill switch
+interface = wg0
+
+# Seed ratio target
+ratio = 1.5
+
+# Exit after download, don't seed
+no-seed = false
+
+# Quiet mode
+quiet = false
+```
+
+Command line options override config file settings.
 
 ## Kill Switch
 

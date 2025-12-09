@@ -164,6 +164,53 @@ bool interface_up(const std::string& iface) {
     return state == "up" || state == "unknown";
 }
 
+std::string get_config_path() {
+    const char* home = std::getenv("HOME");
+    if (!home) home = "/tmp";
+    return (fs::path(home) / ".config" / "curlent" / "config").string();
+}
+
+void load_config(Options& opts) {
+    std::string config_path = get_config_path();
+    std::ifstream ifs(config_path);
+    if (!ifs) return;
+
+    std::string line;
+    while (std::getline(ifs, line)) {
+        // Skip empty lines and comments
+        if (line.empty() || line[0] == '#') continue;
+
+        // Remove leading/trailing whitespace
+        size_t start = line.find_first_not_of(" \t");
+        size_t end = line.find_last_not_of(" \t");
+        if (start == std::string::npos) continue;
+        line = line.substr(start, end - start + 1);
+
+        // Parse key=value
+        size_t eq = line.find('=');
+        if (eq == std::string::npos) continue;
+
+        std::string key = line.substr(0, eq);
+        std::string value = line.substr(eq + 1);
+
+        // Remove whitespace around key and value
+        key.erase(key.find_last_not_of(" \t") + 1);
+        value.erase(0, value.find_first_not_of(" \t"));
+
+        if (key == "output") {
+            opts.output_dir = value;
+        } else if (key == "interface") {
+            opts.interface = value;
+        } else if (key == "ratio") {
+            opts.seed_ratio = std::stof(value);
+        } else if (key == "no-seed") {
+            opts.no_seed = (value == "true" || value == "1");
+        } else if (key == "quiet") {
+            opts.quiet = (value == "true" || value == "1");
+        }
+    }
+}
+
 void print_usage(const char* prog) {
     std::cout << "Usage: " << prog << " <magnet_link_or_torrent_file> [OPTIONS]\n"
               << "\n"
@@ -173,11 +220,16 @@ void print_usage(const char* prog) {
               << "  -r, --ratio RATIO   Seed ratio target (default: 2.0)\n"
               << "  -n, --no-seed       Exit after download, don't seed\n"
               << "  -q, --quiet         Quiet mode - minimal output\n"
-              << "  -h, --help          Show this help\n";
+              << "  -h, --help          Show this help\n"
+              << "\n"
+              << "Config file: ~/.config/curlent/config\n";
 }
 
 Options parse_args(int argc, char* argv[]) {
     Options opts;
+
+    // Load config file first, command line args override
+    load_config(opts);
 
     if (argc < 2) {
         print_usage(argv[0]);

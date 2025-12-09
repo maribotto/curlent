@@ -1,0 +1,17 @@
+# curlent configuration file
+# Place at ~/.config/curlent/config
+
+# Output directory (default: current directory)
+#output = ~/Downloads
+
+# Bind to network interface with kill switch
+#interface = wg0
+
+# Seed ratio target (default: 2.0)
+#ratio = 2.0
+
+# Exit after download, don't seed
+#no-seed = false
+
+# Quiet mode - minimal output
+#quiet = false
